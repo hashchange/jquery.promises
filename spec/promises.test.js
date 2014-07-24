@@ -239,9 +239,9 @@ $( function() {
 
         doneArgs = new ArgStore();
         failArgs = new ArgStore();
-        scope    = new ScopeStore(),
+        scope    = new ScopeStore();
 
-            contextA = { name: 'contextA' };
+        contextA = { name: 'contextA' };
         contextB = { name: 'contextB' };
 
     };
@@ -528,7 +528,7 @@ $( function() {
 
     test( "Trying to add promises after the collection is resolved throws an exception", function () {
 
-        raises( function () {
+        throws( function () {
 
             promises = new $.Promises( a, b );
             pool.deferreds.resolve( a, b ).withArgs( 'A', 'B' ).andApply();
@@ -541,7 +541,7 @@ $( function() {
 
     test( "Trying to add promises after the collection has failed throws an exception", function () {
 
-        raises( function () {
+        throws( function () {
 
             promises = new $.Promises( a, b );
             a.reject();
@@ -692,7 +692,7 @@ $( function() {
 
     test( "Invoking postpone() throws an exception if the collective promises are already resolved", function () {
 
-        raises( function () {
+        throws( function () {
 
             promises = new $.Promises( a, b );
             promises.done( doneArgs.capture );
