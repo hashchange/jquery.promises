@@ -110,7 +110,7 @@
 
                     return this;
 
-                }
+                };
 
                 this.ignoreBelated = function ( yesno ) {
 
@@ -123,12 +123,12 @@
 
                     return ! ( this.isResolved() || this.isRejected() );
 
-                }
+                };
 
                 var resolveIfCurrent = function ( counterAtInvokation ) {
 
                     return ( function() {
-                        if ( counter == counterAtInvokation ) masterDfd.resolve.apply( this, arguments );
+                        if ( counter === counterAtInvokation ) masterDfd.resolve.apply( this, arguments );
                     } );
 
                 };
@@ -136,7 +136,7 @@
                 var rejectIfCurrent = function ( counterAtInvokation ) {
 
                     return ( function() {
-                        if ( counter == counterAtInvokation ) masterDfd.reject.apply( this, arguments );
+                        if ( counter === counterAtInvokation ) masterDfd.reject.apply( this, arguments );
                     } );
 
                 };
