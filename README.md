@@ -4,15 +4,15 @@ Handling collections of jQuery Deferreds with $.Promises.
 
 ## What are $.Promises?
 
-The `$.Promises` object is a convenience wrapper around arrays of jQuery Deferreds or promises. It helps to collect Deferreds and add new ones later on, to delay their resolution and pass them to [`$.when`][jquery-when] even before all Deferreds of the collection are set up.
+The `$.Promises` object is a convenience wrapper around arrays of jQuery Deferreds or promises. It helps you to collect Deferreds and add new ones later on, to delay their resolution and pass them to [`$.when`][jquery-when] even before all Deferreds of the collection are set up.
 
 In short, a `$.Promises` collection provides an an easy-to-read API for managing related Deferreds as a group, and for controlling their behaviour.
 
 ## Dependencies and setup
 
-jQuery.Promises is an extension for jQuery and requires jQuery 1.6.0 or newer. Include jquery.promises.js after jQuery is available.
+jQuery.Promises is an extension for jQuery and requires jQuery 1.6.0 or newer. Include jquery.promises.js after jQuery is ready.
 
-The stable version of Backbone.Declarative.Views is available in the `dist` directory ([dev][dist-dev], [prod][dist-prod]), including an AMD build ([dev][dist-amd-dev], [prod][dist-amd-prod]). If you use Bower, fetch the files with `bower install jquery.promises`. With npm, it is `npm install jquery.promises`.
+The stable version of jQuery.Promises is available in the `dist` directory ([dev][dist-dev], [prod][dist-prod]), including an AMD build ([dev][dist-amd-dev], [prod][dist-amd-prod]). If you use Bower, fetch the files with `bower install jquery.promises`. With npm, it is `npm install jquery.promises`.
 
 ## Making Promises is easy - postponing them, too
 
@@ -35,7 +35,7 @@ myPromises.done( ... ).fail( ... );
 $.when( myPromises ).done( ... );
 ```
 
-Now here's the thing. We can add more promises or Deferreds to the collection even if the current ones have all resolved. We just need to treat these Promises like new-year resolutions ;-)
+Now here's the thing. We can add more promises or Deferreds to the collection even if the current ones have all resolved. We just need to treat these Promises like new-year resolutions, and `postpone()` them.
 
 ```javascript
 // We delay the resolution of our promises and add some more
@@ -63,7 +63,7 @@ When all is set up, `$.when` will act on the updated collection. This can't be d
 myPromises.stopPostponing();
 ```
 
-will unblock the resolution or rejection of myPromises.
+will unblock the resolution or rejection of the aggregated promises. `$.when` will now respond to their state.
 
 ## The API
 
@@ -81,9 +81,9 @@ will unblock the resolution or rejection of myPromises.
 
   Calling `.postpone()` is useful
 
-       + if you pass Promises to `$.when` while you are still adding new promises to the collection, and want them to impact `$.when()`.
-       + if you attach `.done()` and `.fail()` handlers early, before you have made all your promises.
-       + if you are in the process of gathering promises while the ones you have already added might resolve at any time. If all of them do, the collection resolves as well - unless you have called `postpone()` to keep the collection open for more promises.
+    + if you pass Promises to `$.when` while you are still adding new promises to the collection, and want them to impact `$.when()`
+    + if you attach `.done()` and `.fail()` handlers early, before you have made all your promises
+    + if you are in the process of gathering promises while the ones you have already added might resolve at any time. If all of them resolve, so does the collection - unless you have called `postpone()` to keep the collection open for more promises.
 
 - `.stopPostponing()`
 
@@ -100,7 +100,7 @@ will unblock the resolution or rejection of myPromises.
 
 ## A caveat
 
-The `$.Promises` object is not built with performance in mind. [Look at the code][src] - you won't see any of the 'low-level' stuff which makes up the jQuery implementation of Deferreds. Rather, `$.Promises` is built on top of Deferreds. As a result, the code easy to read and maintain, but the implementation is not as efficient as it could be. That's the trade-off.
+The `$.Promises` object is not built with maximum performance in mind. [Look at the code][src] - you won't see any of the 'low-level' stuff which makes up the jQuery implementation of Deferreds. Rather, `$.Promises` is built on top of Deferreds. As a result, the code easy to read and maintain, but the implementation is not as efficient as it would otherwise be. That's the trade-off.
 
 ## Build process and tests
 
@@ -108,7 +108,7 @@ If you'd like to fix, customize or otherwise improve the project: here are your 
 
 ### Setup
 
-[npm][] and [Bower][] set up the environment for you. 
+[npm][] and [Bower][] set up the environment for you.
 
 - The only thing you've got to have on your machine is [Node.js]. Download the installer [here][Node.js].
 - Open a command prompt in the project directory.
