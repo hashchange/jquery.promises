@@ -253,7 +253,7 @@ $( function() {
 
         promises = new $.Promises( a, b.promise() );
 
-        promises.done( doneArgs.capture )
+        promises.done( doneArgs.capture );
         promises.add( c, d.promise() )
             .add( e );
 
@@ -766,68 +766,12 @@ $( function() {
 
     module( 'Testing the context passed to the callbacks', { setup: setUp } );
 
-    test( 'A single Deferred is resolved() without a specific context, added with constructor: the context passed to the callback ("this" in the callback) must be the underlying Deferred', function () {
-
-        // Note: $.when passes itself as the context - sort of. In fact, it
-        // doesn't pass the promise it returns, but the underlying Deferred.
-        // 
-        // This doesn't break encapsulation, though, because when the Deferred
-        // is passed to the callbacks, it has already been resolved and has
-        // become immutable, just like the promise.
-
-        // NB: The context provided in this case is not really specified anywhere,
-        // and arguably should not be relied upon.
-
-        promises = new $.Promises( a );
-
-        promises.done( doneArgs.capture, scope.capture );
-        a.resolve( 'A' );
-
-        testing.compareToWhen.usingDeferreds( a ).sameDoneScope( scope.get() );
-
-    } );
-
-    test( 'A single Deferred is resolved() without a specific context, added with add(): the context passed to the callback ("this" in the callback) must be the underlying Deferred', function () {
-
-        // On the behaviour of $.when, see preceding note. 
-
-        // !!!!
-        //
-        // The Deferreds used by $.when and $.Promises are not deepEqual (apparently
-        // due to the way $.Promises works internally). We have to test indirectly,
-        // just checking that the object methods match (ie, it really is a Deferred)
-        // and that the Deferred is resolved.
-
-        promises = new $.Promises();
-        promises.add( a );
-
-        promises.done( doneArgs.capture, scope.capture );
-        a.resolve( 'A' );
-
-        testing.equalsDeferred( scope.get(), 'scope is a Deferred' );
-        ok( scope.get().isResolved(), 'scope is resolved' );
-
-        //testing.compareToWhen.usingDeferreds( a ).sameDoneScope( scope.get() );   // this would fail, see above
-        testing.compareToWhen.usingDeferreds( a ).equalDoneScopeObject( scope.get() );
-
-    } );
-
-    test( 'Multiple Deferreds are resolved() without a specific context: the context passed to the callback must be the underlying Deferred', function () {
-
-        // On the behaviour of $.when and the limitations of the test, see
-        // preceding notes. 
-
-        promises = new $.Promises( a, b );
-
-        promises.done( doneArgs.capture, scope.capture );
-        pool.deferreds.resolve( a, b ).withArgs( 'A', 'B' ).andApply();
-
-        testing.equalsDeferred( scope.get(), 'scope is a Deferred' );
-        ok( scope.get().isResolved(), 'scope is resolved' );
-
-        testing.compareToWhen.usingDeferreds( a ).equalDoneScopeObject( scope.get() );
-
-    } );
+    // We do not test what context is passed to the callbacks if that context is
+    // not specified explicitly with .resolveWith().
+    //
+    // In that case, what happens to the context is not specified anywhere, and
+    // it must not be relied upon. Because of that, the context provided by
+    // $.Promises is allowed to be entirely arbitrary, with zero need for tests.
 
     test( 'Adding only one deferred, resolved with resolveWith(): arguments and context are passed on', function () {
 
@@ -845,15 +789,23 @@ $( function() {
 
     } );
 
-    test( 'Multiple deferreds resolved with resolveWith(): arguments are passed on, context is ignored, underlying Deferred is used as default context', function () {
+    test( 'Multiple deferreds resolved with resolveWith(): arguments are passed on, context is ignored, default context is the same as without $.Promise', function () {
 
         // Note: It is not entirely clear what _should_ be passed as context in
-        // this case. $.when seems to fall back to its default behaviour, passing
-        // the Deferred.
+        // this case. In jQuery < 1.8, $.when seems to fall back to its default
+        // behaviour, passing the Deferred. But that changes in later versions.
         //
         // In fact it shouldn't matter what is passed because whatever it is, it
         // is in conflict with the (inconsistent) intentions expressed by
         // resolveWith().
+        //
+        // For now, we just test if there is logic to the madness: $.Promises
+        // should pass the same context as a regular setup with deferreds -
+        // whatever that context may be.
+        //
+        // Even that limited assertion could be viewed as arbitrary. If this
+        // test becomes a problem in future versions of jQuery, it should simply
+        // be removed.
 
         promises = new $.Promises( a, b );
 
@@ -865,9 +817,6 @@ $( function() {
         deepEqual( doneArgs.toArray(), [ 'A', 'B' ] );
         notDeepEqual( scope.get(), contextA, 'resolveWith() context is ignored' );
         notDeepEqual( scope.get(), contextB, 'resolveWith() context is ignored' );
-
-        testing.equalsDeferred( scope.get(), 'scope is a Deferred' );
-        ok( scope.get().isResolved(), 'scope is resolved' );
 
         testing.compareToWhen.usingDeferreds( a, b )
             .sameDoneArgs( doneArgs.toArray() )

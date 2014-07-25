@@ -19,9 +19,9 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       // Component dependencies
-      // jQuery path for old versions:
-      'bower_components/jquery/jquery.js',
-//      'bower_components/jquery/dist/jquery.js',
+      // Path for jQuery < 2.1:
+//      'bower_components/jquery/jquery.js',
+      'bower_components/jquery/dist/jquery.js',
 
       'lib-other/**/*.js',
 

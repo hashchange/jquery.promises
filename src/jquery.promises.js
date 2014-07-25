@@ -1,6 +1,9 @@
 ;( function( jQuery ) {
     "use strict";
 
+    // Flag legacy versions < 1.8 which still have Deferred.isResolved, Deferred.isRejected support
+    var isLegacyJquery = /^1\.[1-7]/.test( jQuery.fn.jquery );
+
     jQuery.extend( {
 
         Promises: ( function ( $ ) {
@@ -124,6 +127,19 @@
                     return ! ( this.isResolved() || this.isRejected() );
 
                 };
+
+                // Keep `isResolved` and `isRejected` available in jQuery >= 1.8
+                if ( ! isLegacyJquery ) {
+
+                    this.isResolved = function () {
+                        return this.state() === "resolved";
+                    };
+
+                    this.isRejected = function () {
+                        return this.state() === "rejected";
+                    };
+
+                }
 
                 var resolveIfCurrent = function ( counterAtInvokation ) {
 
