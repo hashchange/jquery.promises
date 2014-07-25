@@ -1,8 +1,14 @@
 ;( function( jQuery ) {
     "use strict";
 
-    // Flag legacy versions < 1.8 which still have Deferred.isResolved, Deferred.isRejected support
-    var isLegacyJquery = /^1\.[1-7]/.test( jQuery.fn.jquery );
+    // Detect support for deferred.isResolved, deferred.isRejected in the available jQuery version
+    var dfdHasFeature = (function () {
+        var dfd = jQuery.Deferred();
+        return {
+            isResolved: !! dfd.isResolved,
+            isRejected: !! dfd.isRejected
+        };
+    })();
 
     jQuery.extend( {
 
@@ -129,11 +135,15 @@
                 };
 
                 // Keep `isResolved` and `isRejected` available in jQuery >= 1.8
-                if ( ! isLegacyJquery ) {
+                if ( ! dfdHasFeature.isResolved ) {
 
                     this.isResolved = function () {
                         return this.state() === "resolved";
                     };
+
+                }
+
+                if ( ! dfdHasFeature.isRejected ) {
 
                     this.isRejected = function () {
                         return this.state() === "rejected";
