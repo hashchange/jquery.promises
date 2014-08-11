@@ -153,17 +153,17 @@
 
                 var resolveIfCurrent = function ( counterAtInvokation ) {
 
-                    return ( function() {
+                    return function() {
                         if ( counter === counterAtInvokation ) masterDfd.resolve.apply( this, arguments );
-                    } );
+                    };
 
                 };
 
                 var rejectIfCurrent = function ( counterAtInvokation ) {
 
-                    return ( function() {
+                    return function() {
                         if ( counter === counterAtInvokation ) masterDfd.reject.apply( this, arguments );
-                    } );
+                    };
 
                 };
 

@@ -1,9 +1,11 @@
-// jQuery.Promises, v1.0.0
+// jQuery.Promises, v1.0.1
 // Copyright (c)2014 Michael Heim, Zeilenwechsel.de
 // Distributed under MIT license
 // http://github.com/hashchange/jquery.promises
 
 ;( function ( root, factory ) {
+    "use strict";
+
     if ( typeof exports === 'object' ) {
 
         module.exports = factory( require( 'jquery' ) );
@@ -14,7 +16,7 @@
 
     }
 }( this, function ( jQuery ) {
-    "option strict";
+    "use strict";
 
     ;( function( jQuery ) {
         "use strict";
@@ -171,17 +173,17 @@
     
                     var resolveIfCurrent = function ( counterAtInvokation ) {
     
-                        return ( function() {
+                        return function() {
                             if ( counter === counterAtInvokation ) masterDfd.resolve.apply( this, arguments );
-                        } );
+                        };
     
                     };
     
                     var rejectIfCurrent = function ( counterAtInvokation ) {
     
-                        return ( function() {
+                        return function() {
                             if ( counter === counterAtInvokation ) masterDfd.reject.apply( this, arguments );
-                        } );
+                        };
     
                     };
     

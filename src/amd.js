@@ -1,4 +1,6 @@
 ;( function ( root, factory ) {
+    "use strict";
+
     if ( typeof exports === 'object' ) {
 
         module.exports = factory( require( 'jquery' ) );
@@ -9,7 +11,7 @@
 
     }
 }( this, function ( jQuery ) {
-    "option strict";
+    "use strict";
 
     // @include jquery.promises.js
     return jQuery.Promises;

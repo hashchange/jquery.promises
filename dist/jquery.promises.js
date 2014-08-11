@@ -1,4 +1,4 @@
-// jQuery.Promises, v1.0.0
+// jQuery.Promises, v1.0.1
 // Copyright (c)2014 Michael Heim, Zeilenwechsel.de
 // Distributed under MIT license
 // http://github.com/hashchange/jquery.promises
@@ -158,17 +158,17 @@
 
                 var resolveIfCurrent = function ( counterAtInvokation ) {
 
-                    return ( function() {
+                    return function() {
                         if ( counter === counterAtInvokation ) masterDfd.resolve.apply( this, arguments );
-                    } );
+                    };
 
                 };
 
                 var rejectIfCurrent = function ( counterAtInvokation ) {
 
-                    return ( function() {
+                    return function() {
                         if ( counter === counterAtInvokation ) masterDfd.reject.apply( this, arguments );
-                    } );
+                    };
 
                 };
 
