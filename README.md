@@ -144,6 +144,17 @@ In case anything about the test and build process needs to be changed, have a lo
 
 New test files in the `spec` directory are picked up automatically, no need to edit the configuration for that.
 
+## Release Notes
+
+### v1.0.1
+
+- Fixed strict mode in AMD template
+- Fixed and improved JSHint config
+
+### v1.0.0
+
+- Initial development, tests, documentation
+
 ## License
 
 MIT.
