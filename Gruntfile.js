@@ -17,7 +17,7 @@ module.exports = function(grunt) {
     meta: {
       version: '<%= pkg.version %>',
       banner: '// jQuery.Promises, v<%= meta.version %>\n' +
-        '// Copyright (c)<%= grunt.template.today("yyyy") %> Michael Heim, Zeilenwechsel.de\n' +
+        '// Copyright (c) 2011-<%= grunt.template.today("yyyy") %> Michael Heim, Zeilenwechsel.de\n' +
         '// Distributed under MIT license\n' +
         '// http://github.com/hashchange/jquery.promises\n' +
         '\n'
