@@ -21,7 +21,49 @@
                     counter = 0,
                     block,
                     blockIndex,
-                    ignoreBelatedCalls = false;
+                    ignoreBelatedCalls = false,
+
+                    resolveIfCurrent = function ( counterAtInvokation ) {
+
+                        return function() {
+                            if ( counter === counterAtInvokation ) masterDfd.resolve.apply( this, arguments );
+                        };
+
+                    },
+
+                    rejectIfCurrent = function ( counterAtInvokation ) {
+
+                        return function() {
+                            if ( counter === counterAtInvokation ) masterDfd.reject.apply( this, arguments );
+                        };
+
+                    },
+
+                    /**
+                     * Takes an array of objects and removes any duplicates. The first
+                     * occurrence of the object is preserved. The order of elements
+                     * remains unchanged.
+                     *
+                     * @param   {Array} arr
+                     * @returns {Array}
+                     */
+                    toUniqueObjects = function ( arr ) {
+
+                        var unique = [],
+                            duplicate,
+                            i, j, len, uniqueLen;
+
+                        for ( i = 0, len = arr.length; i < len; i++ ) {
+
+                            duplicate = false;
+                            for ( j = 0, uniqueLen = unique.length; j < uniqueLen; j++ ) duplicate = ( arr[i] === unique[j] ) || duplicate;
+                            if ( ! duplicate ) unique.push( arr[i] );
+
+                        }
+
+                        return unique;
+
+                    };
 
 
                 // Make 'new' optional
@@ -34,32 +76,23 @@
 
                 }
 
+                // Keep `isResolved` and `isRejected` available in jQuery >= 1.8
+                if ( ! dfdHasFeature.isResolved ) {
 
-                /**
-                 * Takes an array of objects and removes any duplicates. The first
-                 * occurrence of the object is preserved. The order of elements
-                 * remains unchanged.
-                 *
-                 * @param   {Array} arr
-                 * @returns {Array}
-                 */
-                var toUniqueObjects = function ( arr ) {
+                    this.isResolved = function () {
+                        return this.state() === "resolved";
+                    };
 
-                    var unique = [],
-                        duplicate,
-                        i, j, len, uniqueLen;
+                }
 
-                    for ( i = 0, len = arr.length; i < len; i++ ) {
+                if ( ! dfdHasFeature.isRejected ) {
 
-                        duplicate = false;
-                        for ( j = 0, uniqueLen = unique.length; j < uniqueLen; j++ ) duplicate = ( arr[i] === unique[j] ) || duplicate;
-                        if ( ! duplicate ) unique.push( arr[i] );
+                    this.isRejected = function () {
+                        return this.state() === "rejected";
+                    };
 
-                    }
+                }
 
-                    return unique;
-
-                };
 
                 this.add = function () {
 
@@ -131,39 +164,6 @@
                 this.isUnresolved = function () {
 
                     return ! ( this.isResolved() || this.isRejected() );
-
-                };
-
-                // Keep `isResolved` and `isRejected` available in jQuery >= 1.8
-                if ( ! dfdHasFeature.isResolved ) {
-
-                    this.isResolved = function () {
-                        return this.state() === "resolved";
-                    };
-
-                }
-
-                if ( ! dfdHasFeature.isRejected ) {
-
-                    this.isRejected = function () {
-                        return this.state() === "rejected";
-                    };
-
-                }
-
-                var resolveIfCurrent = function ( counterAtInvokation ) {
-
-                    return function() {
-                        if ( counter === counterAtInvokation ) masterDfd.resolve.apply( this, arguments );
-                    };
-
-                };
-
-                var rejectIfCurrent = function ( counterAtInvokation ) {
-
-                    return function() {
-                        if ( counter === counterAtInvokation ) masterDfd.reject.apply( this, arguments );
-                    };
 
                 };
 
