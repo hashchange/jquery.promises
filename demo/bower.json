@@ -21,7 +21,7 @@
     "tests"
   ],
   "dependencies": {
-    "requirejs": "~2.1.14",
-    "foundation": "~5.3.0"
+    "foundation": "~5.5.3",
+    "requirejs": "~2.2.0"
   }
 }
