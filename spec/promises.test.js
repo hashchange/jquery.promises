@@ -1,327 +1,89 @@
 /*global $ */
 $( function () {
 
-    var promises,
-        doneArgs,
-        failArgs,
-        scope,
-        contextA,
-        contextB,
-        a, b, c, d, e, f,
-
-        ArgStore = function () {
-
-            var args = [];
-
-            this.capture = function () {
-                args = Array.prototype.slice.call( arguments );
-            };
-
-            this.toArray = function () {
-                return args;
-            };
-
-        },
-
-        ScopeStore = function () {
-
-            var scope = null;
-
-            this.capture = function () {
-                scope = this;
-            };
-
-            this.get = function () {
-                return scope;
-            };
-
-        },
-
-        testing = {
-
-            getPropertiesArray: function ( obj ) {
-
-                var arr = [],
-                    name;
-
-                for ( name in  obj ) arr.push( name );
-                return arr.sort();
-
-            },
-
-            equalsDeferred: function ( obj ) {
-
-                assert.deepEqual( testing.getPropertiesArray( obj ), testing.getPropertiesArray( $.Deferred() ) );
-                return this;
-
-            },
-
-            compareToWhen: (function () {
-
-                var assert,
-                    $when,
-                    expectedDoneArgs,
-                    expectedFailArgs,
-                    expectedDoneScope,
-                    expectedFailScope,
-
-
-                    resetCapture = function () {
-
-                        $when = null;
-                        expectedDoneArgs = new ArgStore();
-                        expectedFailArgs = new ArgStore();
-                        expectedDoneScope = new ScopeStore();
-                        expectedFailScope = new ScopeStore();
-
-                    },
-
-                    /**
-                     * @public
-                     */
-                    reset = function () {
-
-                        assert = null;
-                        resetCapture();
-
-                    },
-
-                    /**
-                     * @public
-                     */
-                    use = function ( assertions ) {
-                        assert = assertions;
-                        return this;
-                    },
-
-                    /**
-                     * @public
-                     */
-                    usingDeferreds = function ( dfd1, dfd2, dfdN ) {
-
-                        resetCapture();
-
-                        $when = $.when.apply( this, arguments )
-                            .done( expectedDoneArgs.capture, expectedDoneScope.capture )
-                            .fail( expectedFailArgs.capture, expectedFailScope.capture );
-
-                        return this;
-
-                    },
-
-                    /**
-                     * @public
-                     */
-                    sameDoneArgs = function ( argumentsArray, message ) {
-
-                        assert.deepEqual( argumentsArray, expectedDoneArgs.toArray(), message );
-                        return this;
-
-                    },
-
-                    /**
-                     * @public
-                     */
-                    sameFailArgs = function ( argumentsArray, message ) {
-
-                        assert.deepEqual( argumentsArray, expectedFailArgs.toArray(), message );
-                        return this;
-
-                    },
-
-                    /**
-                     * @public
-                     */
-                    sameDoneScope = function ( scope, message ) {
-
-                        assert.deepEqual( scope, expectedDoneScope.get(), message );
-                        return this;
-
-                    },
-
-                    /**
-                     * @public
-                     */
-                    sameFailScope = function ( scope, message ) {
-
-                        assert.deepEqual( scope, expectedFailScope.get(), message );
-                        return this;
-
-                    },
-
-                    /**
-                     * @public
-                     * @memberOf testing.compareToWhen
-                     */
-                    equalDoneScopeObject = function ( scope, message ) {
-
-                        assert.deepEqual( testing.getPropertiesArray( scope ), testing.getPropertiesArray( expectedDoneScope.get() ), message );
-                        return this;
-
-                    },
-
-
-                    init = function () {
-                        reset();
-                    };
-
-                init();
-
-
-                return {
-                    usingDeferreds: usingDeferreds,
-                    sameDoneArgs: sameDoneArgs,
-                    sameFailArgs: sameFailArgs,
-                    sameDoneScope: sameDoneScope,
-                    sameFailScope: sameFailScope,
-                    equalDoneScopeObject: equalDoneScopeObject,
-                    use: use,
-                    reset: reset
-                };
-
-            })()
-
-        },
-
-        pool = {
-
-            deferreds: (function () {
-
-                var deferreds = [],
-                    args = [],
-                    contexts = [],
-                    command,
-                    i,
-
-                    resolve = function ( dfd1, dfd2, dfdN ) {
-
-                        deferreds = Array.prototype.slice.call( arguments );
-                        args = [];
-                        contexts = [];
-
-                        command = 'resolve';
-
-                        return this;
-
-                    },
-
-                    withArgs = function ( arg1, arg2, argN ) {
-
-                        args = Array.prototype.slice.call( arguments );
-
-                        for ( i = 0; i < args.length; i++ ) {
-                            if ( !$.isArray( args[i] ) ) args[i] = [args[i]];
-                        }
-
-                        return this;
-
-                    },
-
-                    andApply = function () {
-
-                        for ( i = 0; i < deferreds.length; i++ ) {
-
-                            if ( args[i] === undefined ) {
-                                deferreds[i][command]();
-                            } else {
-                                deferreds[i][command].apply( deferreds[i], args[i] );
-                            }
-
-                        }
-
-                        return this;
-
-                    };
-
-                return {
-                    resolve: resolve,
-                    withArgs: withArgs,
-                    andApply: andApply
-                };
-
-            })()
-
-        },
-
-        setUp = function () {
-
-            testing.compareToWhen.reset();
-
-            promises = new $.Promises();
-
-            a = $.Deferred();
-            b = $.Deferred();
-            c = $.Deferred();
-            d = $.Deferred();
-            e = $.Deferred();
-            f = $.Deferred();
-
-            doneArgs = new ArgStore();
-            failArgs = new ArgStore();
-            scope = new ScopeStore();
-
-            contextA = { name: 'contextA' };
-            contextB = { name: 'contextB' };
-
-        };
-
-
-    module( 'Testing base functionality', { beforeEach: setUp }, function () {
+    module( 'Testing base functionality', function () {
 
         test( 'Resolved promises: Constructor and add() accept both promises and deferreds, collection resolves correctly, arguments are passed on', function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b.promise() );
+                promises = new $.Promises( f.dfd.a, f.dfd.b.promise() );
 
-            promises.done( doneArgs.capture );
-            promises.add( c, d.promise() )
-                .add( e );
+            promises.done( f.doneArgs.capture );
+            promises
+                .add( f.dfd.c, f.dfd.d.promise() )
+                .add( f.dfd.e );
 
-            pool.deferreds.resolve( a, b, c, d, e ).withArgs( 'A', 'B', 'C', 'D', 'E' ).andApply();
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B', 'C', 'D', 'E'] );
+            (new DfdPool)
+                .resolve( f.dfd.a, f.dfd.b, f.dfd.c, f.dfd.d, f.dfd.e ).withArgs( 'A', 'B', 'C', 'D', 'E' )
+                .then( function () {
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a, b, c, d, e ).sameDoneArgs( doneArgs.toArray() );
+                    assert.deepEqual( f.doneArgs.toArray(), ['A', 'B', 'C', 'D', 'E'] );
+
+                    f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b, f.dfd.c, f.dfd.d, f.dfd.e )
+                        .sameDoneArgs( f.doneArgs.toArray() );
+
+                } );
 
         } );
 
         test( 'Using when(), promises can be added after when() is set up', function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b.promise() );
+                promises = new $.Promises( f.dfd.a, f.dfd.b.promise() );
 
-            $.when( promises ).done( doneArgs.capture );
-            promises.add( c, d.promise() );
+            $.when( promises ).done( f.doneArgs.capture );
 
-            pool.deferreds.resolve( a, b, c, d ).withArgs( 'A', 'B', 'C', 'D' ).andApply();
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B', 'C', 'D'] );
+            promises.add( f.dfd.c, f.dfd.d.promise() );
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a, b, c, d ).sameDoneArgs( doneArgs.toArray() );
+            after(
+
+                (new DfdPool).resolve( f.dfd.a, f.dfd.b, f.dfd.c, f.dfd.d ).withArgs( 'A', 'B', 'C', 'D' ).andApply(),
+
+                f.doneArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['A', 'B', 'C', 'D'] );
+
+                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b, f.dfd.c, f.dfd.d )
+                    .sameDoneArgs( f.doneArgs.toArray() );
+
+            } );
 
         } );
 
         test( 'Rejected promise: collection fails, passing on the arguments of the first rejected promise', function ( assert ) {
 
-            assert.expect( 4 );
+            var f = new Fixture( assert, { expectedTests: 4, asyncDoneCalls: 2 } ),
 
-            promises = new $.Promises( a, b, c, d, e );
+                promises = new $.Promises( f.dfd.a, f.dfd.b, f.dfd.c, f.dfd.d, f.dfd.e );
 
-            promises.done( doneArgs.capture ).fail( failArgs.capture );
-            a.resolve( 'A resolved' );
-            b.reject( 'B rejected' );
-            c.reject( 'C rejected' );           // argument will not be passed on, first failure (b) only
-            d.resolve( 'D resolved' );
-            // NB: Deferred e remains unresolved - that should not prevent the
-            // collection from failing.
+            promises.done( f.doneArgs.capture ).fail( f.failArgs.capture );
 
-            assert.deepEqual( doneArgs.toArray(), [] );
-            assert.deepEqual( failArgs.toArray(), ['B rejected'] );
+            after(
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a, b, c, d, e ).sameDoneArgs( doneArgs.toArray() ).sameFailArgs( failArgs.toArray() );
+                f.dfd.a.resolve( 'A resolved' ),
+                f.dfd.b.reject( 'B rejected' ),
+                f.dfd.c.reject( 'C rejected' ),           // argument will not be passed on, first failure (b) only
+                f.dfd.d.resolve( 'D resolved' ),
+                // NB: Deferred e remains unresolved - that should not prevent the
+                // collection from failing.
+
+                f.doneArgs.captured(),
+                f.failArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), [] );
+                assert.deepEqual( f.failArgs.toArray(), ['B rejected'] );
+
+                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b, f.dfd.c, f.dfd.d, f.dfd.e )
+                    .sameDoneArgs( f.doneArgs.toArray() )
+                    .sameFailArgs( f.failArgs.toArray() );
+
+            } );
 
         } );
 
@@ -332,116 +94,167 @@ $( function () {
      ------------------------------------------------------
      */
 
-    module( 'Testing resolve() argument handling', { beforeEach: setUp }, function () {
+    module( 'Testing resolve() argument handling', function () {
 
         test( 'one deferred resolves without arguments, positioned in between deferreds with resolve() args: passed on as undefined', function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b, c );
+            promises = new $.Promises( f.dfd.a, f.dfd.b, f.dfd.c );
 
-            promises.done( doneArgs.capture );
-            pool.deferreds.resolve( a, c ).withArgs( 'A', 'C' ).andApply();
-            b.resolve();
+            promises.done( f.doneArgs.capture );
 
-            assert.deepEqual( doneArgs.toArray(), ['A', undefined, 'C'] );
+            after(
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a, b, c ).sameDoneArgs( doneArgs.toArray() );
+                (new DfdPool).resolve( f.dfd.a, f.dfd.c ).withArgs( 'A', 'C' ).andApply(),
+                f.dfd.b.resolve(),
+
+                f.doneArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['A', undefined, 'C'] );
+
+                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b, f.dfd.c )
+                    .sameDoneArgs( f.doneArgs.toArray() );
+
+            } );
 
         } );
 
         test( 'multiple deferreds resolve without arguments: each passed on as undefined', function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b, c );
+            promises = new $.Promises( f.dfd.a, f.dfd.b, f.dfd.c );
 
-            promises.done( doneArgs.capture );
-            pool.deferreds.resolve( a, b, c ).andApply();
+            promises.done( f.doneArgs.capture );
 
-            assert.deepEqual( doneArgs.toArray(), [undefined, undefined, undefined] );
+            (new DfdPool).resolve( f.dfd.a, f.dfd.b, f.dfd.c )
+                .then( function () {
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a, b, c ).sameDoneArgs( doneArgs.toArray() );
+                    assert.deepEqual( f.doneArgs.toArray(), [undefined, undefined, undefined] );
+
+                    f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b, f.dfd.c )
+                        .sameDoneArgs( f.doneArgs.toArray() );
+
+                } );
 
         } );
 
         test( 'Adding only one deferred which resolves without arguments: nothing passed on', function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a );
+                promises = new $.Promises( f.dfd.a );
 
-            promises.done( doneArgs.capture );
-            a.resolve();
+            promises.done( f.doneArgs.capture );
 
-            assert.deepEqual( doneArgs.toArray(), [] );
+            after(
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a ).sameDoneArgs( doneArgs.toArray() );
+                f.dfd.a.resolve(),
+
+                f.doneArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), [] );
+
+                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a )
+                    .sameDoneArgs( f.doneArgs.toArray() );
+
+            } );
 
         } );
 
         test( 'Using more than one argument per resolve(): arguments grouped in arrays', function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b, c );
+                promises = new $.Promises( f.dfd.a, f.dfd.b, f.dfd.c );
 
-            promises.done( doneArgs.capture );
-            a.resolve( 'A1', 'A2' );
-            b.resolve( 'B' );
-            c.resolve( 'C1', 'C2' );
+            promises.done( f.doneArgs.capture );
 
-            assert.deepEqual( doneArgs.toArray(), [['A1', 'A2'], 'B', ['C1', 'C2']] );
+            after(
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a, b, c ).sameDoneArgs( doneArgs.toArray() );
+                f.dfd.a.resolve( 'A1', 'A2' ),
+                f.dfd.b.resolve( 'B' ),
+                f.dfd.c.resolve( 'C1', 'C2' ),
+
+                f.doneArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), [['A1', 'A2'], 'B', ['C1', 'C2']] );
+
+                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b, f.dfd.c )
+                    .sameDoneArgs( f.doneArgs.toArray() );
+
+            } );
 
         } );
 
         test( "Adding the same deferred multiple times doesn't change outcome", function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, a );
+                promises = new $.Promises( f.dfd.a, f.dfd.a );
 
-            promises.done( doneArgs.capture );
-            a.resolve( 'A' );
+            promises.done( f.doneArgs.capture );
 
-            assert.deepEqual( doneArgs.toArray(), ['A'] );
+            after(
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a ).sameDoneArgs( doneArgs.toArray() );
+                f.dfd.a.resolve( 'A' ),
+
+                f.doneArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['A'] );
+
+                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a )
+                    .sameDoneArgs( f.doneArgs.toArray() );
+
+            } );
 
         } );
 
         test( 'Using a Promises object in multiple $.when functions: arguments available to every $.when', function ( assert ) {
 
-            assert.expect( 5 );
+            var f = new Fixture( assert, { expectedTests: 5, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b, c );
+                promises = new $.Promises( f.dfd.a, f.dfd.b, f.dfd.c ),
 
-            promises.done( doneArgs.capture );
+                when1doneArgs = new ArgStore(),
+                when2doneArgs = new ArgStore(),
+                when3doneArgs = new ArgStore();
 
-            var when1doneArgs = new ArgStore();
-            var when2doneArgs = new ArgStore();
-            var when3doneArgs = new ArgStore();
+            promises.done( f.doneArgs.capture );
+
             $.when( promises ).done( when1doneArgs.capture );
             $.when( promises ).done( when2doneArgs.capture );
 
-            pool.deferreds.resolve( a, b, c ).withArgs( 'A', 'B', 'C' ).andApply();
+            after(
 
-            $.when( promises ).done( when3doneArgs.capture ); // created after resolution
+                (new DfdPool).resolve( f.dfd.a, f.dfd.b, f.dfd.c ).withArgs( 'A', 'B', 'C' ).andApply(),
+                $.when( promises ).done( when3doneArgs.capture ),  // created after resolution
 
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B', 'C'] );
-            assert.deepEqual( when1doneArgs.toArray(), ['A', 'B', 'C'] );
-            assert.deepEqual( when2doneArgs.toArray(), ['A', 'B', 'C'] );
-            assert.deepEqual( when3doneArgs.toArray(), ['A', 'B', 'C'] );
+                f.doneArgs.captured(),
+                when1doneArgs.captured(),
+                when2doneArgs.captured(),
+                when3doneArgs.captured()
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a, b, c ).sameDoneArgs( doneArgs.toArray() );
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['A', 'B', 'C'] );
+                assert.deepEqual( when1doneArgs.toArray(), ['A', 'B', 'C'] );
+                assert.deepEqual( when2doneArgs.toArray(), ['A', 'B', 'C'] );
+                assert.deepEqual( when3doneArgs.toArray(), ['A', 'B', 'C'] );
+
+                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b, f.dfd.c )
+                    .sameDoneArgs( f.doneArgs.toArray() );
+
+            } );
 
         } );
 
@@ -452,14 +265,14 @@ $( function () {
      ------------------------------------------------------
      */
 
-    module( 'Testing object creation', { beforeEach: setUp }, function () {
+    module( 'Testing object creation', function () {
 
         test( "'new' is optional", function ( assert ) {
 
-            assert.expect( 1 );
+            var f = new Fixture( assert, { expectedTests: 1 } ),
 
-            promises = $.Promises( a, b ).add( c );
-            var newPromises = new $.Promises( a, b ).add( c );
+                promises = $.Promises( f.dfd.a, f.dfd.b ).add( f.dfd.c ),
+                newPromises = new $.Promises( f.dfd.a, f.dfd.b ).add( f.dfd.c );
 
             assert.deepEqual( promises, newPromises );
 
@@ -467,60 +280,87 @@ $( function () {
 
         test( "Instances are isolated when created using 'new'", function ( assert ) {
 
-            assert.expect( 4 );
+            var f = new Fixture( assert, { expectedTests: 4, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
-            var morePromises = new $.Promises( c, d );
+                promises = new $.Promises( f.dfd.a, f.dfd.b ),
+                morePromises = new $.Promises( f.dfd.c, f.dfd.d ),
 
-            var moreDoneArgs = new ArgStore(),
+                moreDoneArgs = new ArgStore(),
                 moreFailArgs = new ArgStore();
 
-            promises.done( doneArgs.capture ).fail( failArgs.capture );
+            promises.done( f.doneArgs.capture ).fail( f.failArgs.capture );
             morePromises.done( moreDoneArgs.capture ).fail( moreFailArgs.capture );
 
-            pool.deferreds.resolve( a, b, c ).withArgs( 'resolved', 'resolved', 'resolved' ).andApply();
-            d.reject( 'rejected' );
+            after(
 
-            assert.deepEqual( doneArgs.toArray(), ['resolved', 'resolved'] );
-            assert.deepEqual( moreDoneArgs.toArray(), [] );
+                (new DfdPool).resolve( f.dfd.a, f.dfd.b, f.dfd.c ).withArgs( 'resolved', 'resolved', 'resolved' ).andApply(),
+                f.dfd.d.reject( 'rejected' ),
 
-            assert.deepEqual( failArgs.toArray(), [] );
-            assert.deepEqual( moreFailArgs.toArray(), ['rejected'] );
+                f.doneArgs.captured(),
+                f.failArgs.captured(),
+                moreDoneArgs.captured(),
+                moreFailArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['resolved', 'resolved'] );
+                assert.deepEqual( moreDoneArgs.toArray(), [] );
+
+                assert.deepEqual( f.failArgs.toArray(), [] );
+                assert.deepEqual( moreFailArgs.toArray(), ['rejected'] );
+
+                f.testDone();
+
+            } );
 
         } );
 
         test( "Instances are isolated when created without using 'new'", function ( assert ) {
 
-            assert.expect( 4 );
+            var f = new Fixture( assert, { expectedTests: 4, asyncDoneCalls: 1 } ),
 
-            promises = $.Promises( a, b );
-            var morePromises = $.Promises( c, d );
+                promises = $.Promises( f.dfd.a, f.dfd.b ),
+                morePromises = $.Promises( f.dfd.c, f.dfd.d ),
 
-            var moreDoneArgs = new ArgStore(),
+                moreDoneArgs = new ArgStore(),
                 moreFailArgs = new ArgStore();
 
-            promises.done( doneArgs.capture ).fail( failArgs.capture );
+            promises.done( f.doneArgs.capture ).fail( f.failArgs.capture );
             morePromises.done( moreDoneArgs.capture ).fail( moreFailArgs.capture );
 
-            pool.deferreds.resolve( a, b, c ).withArgs( 'resolved', 'resolved', 'resolved' ).andApply();
-            d.reject( 'rejected' );
+            after(
 
-            assert.deepEqual( doneArgs.toArray(), ['resolved', 'resolved'] );
-            assert.deepEqual( moreDoneArgs.toArray(), [] );
+                (new DfdPool).resolve( f.dfd.a, f.dfd.b, f.dfd.c ).withArgs( 'resolved', 'resolved', 'resolved' ).andApply(),
+                f.dfd.d.reject( 'rejected' )
 
-            assert.deepEqual( failArgs.toArray(), [] );
-            assert.deepEqual( moreFailArgs.toArray(), ['rejected'] );
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['resolved', 'resolved'] );
+                assert.deepEqual( moreDoneArgs.toArray(), [] );
+
+                assert.deepEqual( f.failArgs.toArray(), [] );
+                assert.deepEqual( moreFailArgs.toArray(), ['rejected'] );
+
+                f.testDone();
+
+            } );
 
         } );
 
         test( 'Initialisation without arguments: initial state is unresolved', function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises();
+                promises = new $.Promises();
 
-            assert.ok( !promises.isResolved(), 'initial state is not resolved' );
-            assert.ok( !promises.isRejected(), 'initial state is not rejected' );
+            afterAllPendingResolutionsAreDone().run( function () {
+
+                assert.ok( !promises.isResolved(), 'initial state is not resolved' );
+                assert.ok( !promises.isRejected(), 'initial state is not rejected' );
+
+                f.testDone();
+
+            } );
 
         } );
 
@@ -531,59 +371,130 @@ $( function () {
      ------------------------------------------------------
      */
 
-    module( 'Testing methods revealing state', { beforeEach: setUp }, function () {
+    module( 'Testing methods revealing state', function () {
 
         test( "isResolved(): false until all promises are resolved", function ( assert ) {
 
-            assert.expect( 3 );
+            var f = new Fixture( assert, { expectedTests: 3, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
-            assert.ok( !promises.isResolved() );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
 
-            a.resolve();
-            assert.ok( !promises.isResolved() );
+            afterAllPendingResolutionsAreDone().run( function () {
 
-            b.resolve();
-            assert.ok( promises.isResolved() );
+                assert.ok( !promises.isResolved() );
+
+                after(
+
+                    f.dfd.a.resolve()
+
+                ).run( function () {
+
+
+                    assert.ok( !promises.isResolved() );
+
+                    after(
+
+                        f.dfd.b.resolve()
+
+                    ).run( function () {
+
+                        assert.ok( promises.isResolved() );
+
+                        f.testDone();
+
+                    } );
+
+                } );
+
+            } );
 
         } );
 
         test( "isRejected(): false until the first rejection of a promise", function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
-            assert.ok( !promises.isRejected() );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
 
-            a.reject();
-            assert.ok( promises.isRejected() );
+            afterAllPendingResolutionsAreDone().run( function () {
+
+                assert.ok( !promises.isRejected() );
+
+                after(
+
+                    f.dfd.a.reject()
+
+                ).run( function () {
+
+                    assert.ok( promises.isRejected() );
+
+                    f.testDone();
+
+                } );
+
+            } );
 
         } );
 
         test( "isUnresolved(): true until all promises are resolved", function ( assert ) {
 
-            assert.expect( 3 );
+            var f = new Fixture( assert, { expectedTests: 3, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
-            assert.ok( promises.isUnresolved() );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
 
-            a.resolve();
-            assert.ok( promises.isUnresolved() );
+            afterAllPendingResolutionsAreDone().run( function () {
 
-            b.resolve();
-            assert.ok( !promises.isUnresolved() );
+                assert.ok( promises.isUnresolved() );
+
+                after(
+
+                    f.dfd.a.resolve()
+
+                ).run( function () {
+
+                    assert.ok( promises.isUnresolved() );
+
+                    after(
+
+                        f.dfd.b.resolve()
+
+                    ).run( function () {
+
+                        assert.ok( !promises.isUnresolved() );
+                        
+                        f.testDone();
+
+                    } );
+
+                } );
+
+           } );
 
         } );
 
         test( "isUnresolved(): true until the first rejection of a promise", function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
-            assert.ok( promises.isUnresolved() );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
 
-            a.reject();
-            assert.ok( !promises.isUnresolved() );
+            afterAllPendingResolutionsAreDone().run( function () {
+
+                assert.ok( promises.isUnresolved() );
+
+                after(
+
+                    f.dfd.a.reject()
+
+                ).run( function () {
+
+                    assert.ok( !promises.isUnresolved() );
+
+                    f.testDone();
+                    
+                } );
+
+            } );
 
         } );
 
@@ -594,18 +505,19 @@ $( function () {
      ------------------------------------------------------
      */
 
-    module( 'Testing belated promises', { beforeEach: setUp }, function () {
+    module( 'Testing belated promises', function () {
 
         test( "Trying to add promises after the collection is resolved throws an exception", function ( assert ) {
 
-            assert.expect( 1 );
+            var f = new Fixture( assert, { expectedTests: 1 } ),
+
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
+            (new DfdPool).resolve( f.dfd.a, f.dfd.b ).withArgs( 'A', 'B' ).andApply();
 
             assert.throws( function () {
 
-                promises = new $.Promises( a, b );
-                pool.deferreds.resolve( a, b ).withArgs( 'A', 'B' ).andApply();
-
-                promises.add( c );
+                promises.add( f.dfd.c );
 
             } );
 
@@ -613,14 +525,15 @@ $( function () {
 
         test( "Trying to add promises after the collection has failed throws an exception", function ( assert ) {
 
-            assert.expect( 1 );
+            var f = new Fixture( assert, { expectedTests: 1 } ),
+
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
+            f.dfd.a.reject();
 
             assert.throws( function () {
 
-                promises = new $.Promises( a, b );
-                a.reject();
-
-                promises.add( c );
+                promises.add( f.dfd.c );
 
             } );
 
@@ -628,53 +541,87 @@ $( function () {
 
         test( "With ignoreBelated(), promises are ignored when added after the collection is resolved", function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
             promises
                 .ignoreBelated()
-                .done( doneArgs.capture );
-            pool.deferreds.resolve( a, b ).withArgs( 'A', 'B' ).andApply();
+                .done( f.doneArgs.capture );
 
-            promises.add( c );
+            (new DfdPool).resolve( f.dfd.a, f.dfd.b ).withArgs( 'A', 'B' ).andApply();
+            promises.add( f.dfd.c );
 
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B'], 'aggregate promise resolves as usual, ignoring later additions' );
-            assert.ok( promises.isResolved(), 'additions after resolution do not have any effect on the collective promise' );
+            after(
 
-        } );
+                f.doneArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['A', 'B'], 'aggregate promise resolves as usual, ignoring later additions' );
+                assert.ok( promises.isResolved(), 'additions after resolution do not have any effect on the collective promise' );
+
+                f.testDone();
+
+            } );
+
+         } );
 
         test( "With ignoreBelated(), promises are ignored when added after the collection has failed", function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
             promises
                 .ignoreBelated()
-                .done( doneArgs.capture )
-                .fail( failArgs.capture );
-            a.reject( 'A' );
+                .done( f.doneArgs.capture )
+                .fail( f.failArgs.capture );
 
-            promises.add( c );
+            f.dfd.a.reject( 'A' );
+            promises.add( f.dfd.c );
 
-            assert.deepEqual( failArgs.toArray(), ['A'], 'aggregate promise fails as usual, ignoring later additions' );
-            assert.ok( promises.isRejected(), 'additions after resolution do not have any effect on the collective promise' );
+            after(
+
+                f.failArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.failArgs.toArray(), ['A'], 'aggregate promise fails as usual, ignoring later additions' );
+                assert.ok( promises.isRejected(), 'additions after resolution do not have any effect on the collective promise' );
+
+                f.testDone();
+
+            } );
 
         } );
 
         test( "ignoreBelated() does not affect the aggregation of promises which are added in time", function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
             promises
                 .ignoreBelated()
-                .done( doneArgs.capture );
+                .done( f.doneArgs.capture );
 
-            promises.add( c );
-            pool.deferreds.resolve( a, b, c ).withArgs( 'A', 'B', 'C' ).andApply();
+            promises.add( f.dfd.c );
 
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B', 'C'], 'aggregate promise resolves as usual' );
-            assert.ok( promises.isResolved(), 'aggregate promise resolves as usual' );
+            after(
+
+                (new DfdPool).resolve( f.dfd.a, f.dfd.b, f.dfd.c ).withArgs( 'A', 'B', 'C' ).andApply(),
+
+                f.doneArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['A', 'B', 'C'], 'aggregate promise resolves as usual' );
+                assert.ok( promises.isResolved(), 'aggregate promise resolves as usual' );
+
+                f.testDone();
+
+            } );
 
         } );
 
@@ -685,120 +632,228 @@ $( function () {
      ------------------------------------------------------
      */
 
-    module( 'Testing postponing', { beforeEach: setUp }, function () {
+    module( 'Testing postponing', function () {
 
         test( 'postpone() delays resolution, allows to add more promises even if all others are already resolved', function ( assert ) {
 
-            assert.expect( 3 );
+            var f = new Fixture( assert, { expectedTests: 3, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
             promises
-                .done( doneArgs.capture )
+                .done( f.doneArgs.capture )
                 .postpone();
 
-            pool.deferreds.resolve( a, b ).withArgs( 'A', 'B' ).andApply();
-            assert.ok( !promises.isResolved(), 'postpone() blocks resolution of aggregate promise' );
+            (new DfdPool).resolve( f.dfd.a, f.dfd.b ).withArgs( 'A', 'B' )
+                .then( function () {
 
-            promises.add( c );
-            c.resolve( 'C' );
-            assert.ok( !promises.isResolved(), 'postpone() still blocks resolution of aggregate promise after adding a new one' );
+                    assert.ok( !promises.isResolved(), 'postpone() blocks resolution of aggregate promise' );
+                    promises.add( f.dfd.c );
+                    f.dfd.c.resolve( 'C' );
 
-            promises.stopPostponing();
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B', 'C'] );
+                    afterAllPendingResolutionsAreDone().run( function () {
+
+                        assert.ok( !promises.isResolved(), 'postpone() still blocks resolution of aggregate promise after adding a new one' );
+
+                        promises.stopPostponing();
+
+                        after(
+
+                            f.doneArgs.captured()
+
+                        ).run( function () {
+
+                            assert.deepEqual( f.doneArgs.toArray(), ['A', 'B', 'C'] );
+
+                            f.testDone();
+
+                        } );
+
+                    } );
+
+                } );
 
         } );
 
         test( 'postpone() allows to add more promises even if all others are already resolved, and the added ones are resolved as well', function ( assert ) {
 
-            assert.expect( 3 );
+            var f = new Fixture( assert, { expectedTests: 3, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
             promises
-                .done( doneArgs.capture )
+                .done( f.doneArgs.capture )
                 .postpone();
 
-            pool.deferreds.resolve( a, b ).withArgs( 'A', 'B' ).andApply();
-            assert.ok( !promises.isResolved(), 'postpone() blocks resolution of aggregate promise' );
+            (new DfdPool).resolve( f.dfd.a, f.dfd.b ).withArgs( 'A', 'B' )
+                .then( function () {
 
-            c.resolve( 'C' );
-            promises.add( c );
-            assert.ok( !promises.isResolved(), 'postpone() still blocks resolution of aggregate promise after adding a resolved new one' );
+                    assert.ok( !promises.isResolved(), 'postpone() blocks resolution of aggregate promise' );
 
-            promises.stopPostponing();
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B', 'C'] );
+                    f.dfd.c.resolve( 'C' );
+                    promises.add( f.dfd.c );
 
-        } );
+                    afterAllPendingResolutionsAreDone().run( function () {
+
+                        assert.ok( !promises.isResolved(), 'postpone() still blocks resolution of aggregate promise after adding a resolved new one' );
+
+                        promises.stopPostponing();
+
+                        after(
+
+                            f.doneArgs.captured()
+
+                        ).run( function () {
+
+                            assert.deepEqual( f.doneArgs.toArray(), ['A', 'B', 'C'] );
+
+                            f.testDone();
+
+                        } );
+
+                    } );
+
+                } );
+
+         } );
 
         test( 'postpone() works as intended when it is called before any promises are added', function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises();
+                promises = new $.Promises();
+
             promises
-                .done( doneArgs.capture )
+                .done( f.doneArgs.capture )
                 .postpone()
-                .add( a );
+                .add( f.dfd.a );
 
-            a.resolve( 'A' );
-            assert.ok( !promises.isResolved(), 'postpone() blocks resolution of aggregate promise' );
+            after(
 
-            promises.stopPostponing();
-            assert.deepEqual( doneArgs.toArray(), ['A'] );
+                f.dfd.a.resolve( 'A' )
+
+            ).run( function () {
+
+
+                assert.ok( !promises.isResolved(), 'postpone() blocks resolution of aggregate promise' );
+
+                promises.stopPostponing();
+
+                after(
+
+                    f.doneArgs.captured()
+
+                ).run( function () {
+
+                    assert.deepEqual( f.doneArgs.toArray(), ['A'] );
+
+                    f.testDone();
+
+                } );
+
+            } );
 
         } );
 
         test( 'Multiple invocations of postpone() are removed correctly with a single stopPostponing()', function ( assert ) {
 
-            assert.expect( 3 );
+            var f = new Fixture( assert, { expectedTests: 3, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
             promises
-                .done( doneArgs.capture )
+                .done( f.doneArgs.capture )
                 .postpone()
                 .postpone();
 
-            pool.deferreds.resolve( a, b ).withArgs( 'A', 'B' ).andApply();
-            assert.ok( !promises.isResolved(), 'multiple postpone() invocations block resolution of aggregate promise just as a single invocation' );
+            (new DfdPool).resolve( f.dfd.a, f.dfd.b ).withArgs( 'A', 'B' ).then( function () {
 
-            promises.postpone()
-                .add( c );
-            c.resolve( 'C' );
-            assert.ok( !promises.isResolved(), 'added postpone() invocations still block resolution of aggregate promise' );
+                assert.ok( !promises.isResolved(), 'multiple postpone() invocations block resolution of aggregate promise just as a single invocation' );
 
-            promises.stopPostponing();
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B', 'C'] );
+                promises
+                    .postpone()
+                    .add( f.dfd.c );
+
+                after(
+
+                    f.dfd.c.resolve( 'C' )
+
+                ).run( function () {
+
+                    assert.ok( !promises.isResolved(), 'added postpone() invocations still block resolution of aggregate promise' );
+
+                    promises.stopPostponing();
+
+                    after(
+
+                        f.doneArgs.captured()
+
+                    ).run( function () {
+
+                        assert.deepEqual( f.doneArgs.toArray(), ['A', 'B', 'C'] );
+
+                        f.testDone();
+
+                    } );
+
+               } );
+
+            } );
 
         } );
 
         test( "Invoking stopPostponing() without having called postpone() doesn't do anything", function ( assert ) {
 
-            assert.expect( 4 );
+            var f = new Fixture( assert, { expectedTests: 4, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
             promises
-                .done( doneArgs.capture )
+                .done( f.doneArgs.capture )
                 .stopPostponing();
 
-            assert.ok( promises.isUnresolved(), 'stopPostponing() has no effect before any promise is resolved' );
+            afterAllPendingResolutionsAreDone().run( function () {
 
-            pool.deferreds.resolve( a, b ).withArgs( 'A', 'B' ).andApply();
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B'], 'aggregate promise resolves as usual' );
-            assert.ok( promises.isResolved(), 'aggregate promise resolves as usual' );
+                assert.ok( promises.isUnresolved(), 'stopPostponing() has no effect before any promise is resolved' );
 
-            promises.stopPostponing();
-            assert.ok( promises.isResolved(), 'additional invocations of stopPostponing after resolution do not have any effect' );
+                after(
+
+                    (new DfdPool).resolve( f.dfd.a, f.dfd.b ).withArgs( 'A', 'B' ).andApply(),
+
+                    f.doneArgs.captured()
+
+                ).run( function () {
+
+                    assert.deepEqual( f.doneArgs.toArray(), ['A', 'B'], 'aggregate promise resolves as usual' );
+                    assert.ok( promises.isResolved(), 'aggregate promise resolves as usual' );
+
+                    promises.stopPostponing();
+
+                    afterAllPendingResolutionsAreDone().run( function () {
+
+                        assert.ok( promises.isResolved(), 'additional invocations of stopPostponing after resolution do not have any effect' );
+
+                        f.testDone();
+
+                    } );
+
+                } );
+
+            } );
 
         } );
 
         test( "Invoking postpone() throws an exception if the collective promises are already resolved", function ( assert ) {
 
-            assert.expect( 1 );
+            var f = new Fixture( assert, { expectedTests: 1 } ),
+
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
+            promises.done( f.doneArgs.capture );
+
+            (new DfdPool).resolve( f.dfd.a, f.dfd.b ).withArgs( 'A', 'B' ).andApply();
 
             assert.throws( function () {
-
-                promises = new $.Promises( a, b );
-                promises.done( doneArgs.capture );
-                pool.deferreds.resolve( a, b ).withArgs( 'A', 'B' ).andApply();
 
                 promises.postpone();
 
@@ -808,27 +863,40 @@ $( function () {
 
         test( "With ignoreBelated(), invoking postpone() is ignored if the collective promises are already resolved", function ( assert ) {
 
-            assert.expect( 2 );
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a, b );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+
             promises
                 .ignoreBelated()
-                .done( doneArgs.capture );
-            pool.deferreds.resolve( a, b ).withArgs( 'A', 'B' ).andApply();
+                .done( f.doneArgs.capture );
+
+            (new DfdPool).resolve( f.dfd.a, f.dfd.b ).withArgs( 'A', 'B' ).andApply();
 
             promises.postpone();
 
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B'], 'aggregate promise resolves as usual' );
-            assert.ok( promises.isResolved(), 'invocations of postpone() after resolution do not have any effect on the collective promise' );
+            after(
+
+                f.doneArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['A', 'B'], 'aggregate promise resolves as usual' );
+                assert.ok( promises.isResolved(), 'invocations of postpone() after resolution do not have any effect on the collective promise' );
+
+                f.testDone();
+
+            } );
 
         } );
 
         test( 'Using a Promises object in multiple $.when functions, interspersed with postpone() and later additions: arguments available to every $.when', function ( assert ) {
 
-            assert.expect( 8 );
+            var f = new Fixture( assert, { expectedTests: 8, asyncDoneCalls: 1 } ),
 
-            promises = new $.Promises( a );
-            promises.done( doneArgs.capture );
+                promises = new $.Promises( f.dfd.a );
+
+            promises.done( f.doneArgs.capture );
 
             var when1doneArgs = new ArgStore(),
                 when2doneArgs = new ArgStore(),
@@ -842,28 +910,41 @@ $( function () {
             promises.postpone();
             $.when( promises ).done( when2doneArgs.capture ); // created after postpone()
 
-            promises.add( b );
+            promises.add( f.dfd.b );
             $.when( promises ).done( when3doneArgs.capture ); // created after adding another deferred
 
-            promises.add( c );
+            promises.add( f.dfd.c );
             $.when( promises ).done( when4doneArgs.capture ); // created after adding yet another deferred
 
-            pool.deferreds.resolve( a, b, c ).withArgs( 'A', 'B', 'C' ).andApply();
+            (new DfdPool).resolve( f.dfd.a, f.dfd.b, f.dfd.c ).withArgs( 'A', 'B', 'C' ).andApply();
             $.when( promises ).done( when5doneArgs.capture ); // created after resolution of all passed-in deferreds
 
             promises.stopPostponing();
             $.when( promises ).done( when6doneArgs.capture ); // created after stopPostponing(), ie after resolution of aggregate Promises
 
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B', 'C'] );
-            assert.deepEqual( when1doneArgs.toArray(), ['A', 'B', 'C'] );
-            assert.deepEqual( when2doneArgs.toArray(), ['A', 'B', 'C'] );
-            assert.deepEqual( when3doneArgs.toArray(), ['A', 'B', 'C'] );
-            assert.deepEqual( when4doneArgs.toArray(), ['A', 'B', 'C'] );
-            assert.deepEqual( when5doneArgs.toArray(), ['A', 'B', 'C'] );
-            assert.deepEqual( when6doneArgs.toArray(), ['A', 'B', 'C'] );
+            after(
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a, b, c ).sameDoneArgs( doneArgs.toArray() );
+                f.doneArgs.captured(),
+                when1doneArgs.captured(),
+                when2doneArgs.captured(),
+                when3doneArgs.captured(),
+                when4doneArgs.captured(),
+                when5doneArgs.captured(),
+                when6doneArgs.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['A', 'B', 'C'] );
+                assert.deepEqual( when1doneArgs.toArray(), ['A', 'B', 'C'] );
+                assert.deepEqual( when2doneArgs.toArray(), ['A', 'B', 'C'] );
+                assert.deepEqual( when3doneArgs.toArray(), ['A', 'B', 'C'] );
+                assert.deepEqual( when4doneArgs.toArray(), ['A', 'B', 'C'] );
+                assert.deepEqual( when5doneArgs.toArray(), ['A', 'B', 'C'] );
+                assert.deepEqual( when6doneArgs.toArray(), ['A', 'B', 'C'] );
+
+                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b, f.dfd.c ).sameDoneArgs( f.doneArgs.toArray() );
+
+            } );
 
         } );
 
@@ -873,37 +954,46 @@ $( function () {
     /*
      ------------------------------------------------------
      */
-
-    module( 'Testing the context passed to the callbacks', { beforeEach: setUp }, function () {
-
+    
+    module( 'Testing the context passed to the callbacks', function () {
+    
         // We do not test what context is passed to the callbacks if that context is
         // not specified explicitly with .resolveWith().
         //
         // In that case, what happens to the context is not specified anywhere, and
         // it must not be relied upon. Because of that, the context provided by
         // $.Promises is allowed to be entirely arbitrary, with zero need for tests.
-
+    
         test( 'Adding only one deferred, resolved with resolveWith(): arguments and context are passed on', function ( assert ) {
 
-            assert.expect( 4 );
+            var f = new Fixture( assert, { expectedTests: 4, asyncDoneCalls: 2 } ),
 
-            promises = new $.Promises( a );
+                promises = new $.Promises( f.dfd.a );
 
-            promises.done( doneArgs.capture, scope.capture );
-            a.resolveWith( contextA, ['A'] );
+            promises.done( f.doneArgs.capture, f.scope.capture );
 
-            assert.deepEqual( doneArgs.toArray(), ['A'] );
-            assert.deepEqual( scope.get(), contextA );
+            after(
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a )
-                .sameDoneArgs( doneArgs.toArray() )
-                .sameDoneScope( scope.get() );
+                f.dfd.a.resolveWith( f.contextA, ['A'] ),
+
+                f.doneArgs.captured(),
+                f.scope.captured()
+
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['A'] );
+                assert.deepEqual( f.scope.get(), f.contextA );
+
+                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a )
+                    .sameDoneArgs( f.doneArgs.toArray() )
+                    .sameDoneScope( f.scope.get() );
+
+            } );
 
         } );
-
+    
         test( 'Multiple deferreds resolved with resolveWith(): arguments are passed on, context is ignored, default context is the same as without $.Promise', function ( assert ) {
-
+    
             // Note: It is not entirely clear what _should_ be passed as context in
             // this case. In jQuery < 1.8, $.when seems to fall back to its default
             // behaviour, passing the Deferred. But that changes in later versions.
@@ -919,27 +1009,37 @@ $( function () {
             // Even that limited assertion could be viewed as arbitrary. If this
             // test becomes a problem in future versions of jQuery, it should simply
             // be removed.
-
+    
             assert.expect( 5 );
 
-            promises = new $.Promises( a, b );
+            var f = new Fixture( assert, { expectedTests: 5, asyncDoneCalls: 2 } ),
 
-            promises.done( doneArgs.capture, scope.capture );
+                promises = new $.Promises( f.dfd.a, f.dfd.b );
+    
+            promises.done( f.doneArgs.capture, f.scope.capture );
 
-            a.resolveWith( contextA, ['A'] );
-            b.resolveWith( contextB, ['B'] );
+            after(
 
-            assert.deepEqual( doneArgs.toArray(), ['A', 'B'] );
-            assert.notDeepEqual( scope.get(), contextA, 'resolveWith() context is ignored' );
-            assert.notDeepEqual( scope.get(), contextB, 'resolveWith() context is ignored' );
+                f.dfd.a.resolveWith( f.contextA, ['A'] ),
+                f.dfd.b.resolveWith( f.contextB, ['B'] ),
+                
+                f.doneArgs.captured(),
+                f.scope.captured()
 
-            testing.compareToWhen.use( assert );
-            testing.compareToWhen.usingDeferreds( a, b )
-                .sameDoneArgs( doneArgs.toArray() )
-                .equalDoneScopeObject( scope.get() );
+            ).run( function () {
+
+                assert.deepEqual( f.doneArgs.toArray(), ['A', 'B'] );
+                assert.notDeepEqual( f.scope.get(), f.contextA, 'resolveWith() context is ignored' );
+                assert.notDeepEqual( f.scope.get(), f.contextB, 'resolveWith() context is ignored' );
+
+                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b )
+                    .sameDoneArgs( f.doneArgs.toArray() )
+                    .equalDoneScopeObject( f.scope.get() );
+
+            } );
 
         } );
-
+    
     } );
-
+    
 } );
