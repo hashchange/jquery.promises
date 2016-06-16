@@ -169,6 +169,48 @@ var ArgStore = function () {
 
             },
 
+            /**
+             * Fixture class.
+             *
+             * Parameters:
+             *
+             * - assert:
+             *   The assert object which is passed to each QUnit test.
+             *
+             * - config.expectedTests:
+             *   The number of assertions which are made in the test. That includes both explicit calls to
+             *   assert.whatever and assertions wrapped in methods of `compareOutcomeToJQueryWhen`.
+             *
+             *   Each of the following methods (of `compareOutcomeToJQueryWhen`) include an assertion and count towards
+             *   the number of expected tests:
+             *
+             *   + sameDoneArgs
+             *   + sameFailArgs
+             *   + sameDoneScope
+             *   + sameFailScope
+             *   + equalDoneScopeObject
+             *
+             * - config.asyncDoneCalls:
+             *   Used if the test is async. Asynchronous assertions are marked as "done" by calling the testDone()
+             *   method of the fixture. That method can be called multiple times during a test, e.g. for multiple
+             *   assertions which are all async, but complete independently of one another.
+             *
+             *   Each and every call to testDone() must be declared in config.asyncDoneCalls. The number also includes
+             *   implicit calls, triggered by methods of `compareOutcomeToJQueryWhen` (see below). The default value of
+             *   config.asyncDoneCalls is 0, which means that the test is synchronous.
+             *
+             *   ATTN:
+             *   The assertion methods of `compareOutcomeToJQueryWhen` are all async, and they invoke testDone()
+             *   automatically when they finish. Each call to these methods adds to the count declared in
+             *   config.asyncDoneCalls. The methods are listed above (see config.expectedTests).
+             *
+             * @param {Object} assert
+             * @param {Object} config
+             * @param {number} config.expectedTests
+             * @param {number} [config.asyncDoneCalls=0]
+             *
+             * @constructor
+             */
             Fixture = function ( assert, config ) {
 
                 assert.expect( config.expectedTests );
