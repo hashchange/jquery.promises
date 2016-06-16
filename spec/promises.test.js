@@ -56,7 +56,7 @@ $( function () {
 
         test( 'Rejected promise: collection fails, passing on the arguments of the first rejected promise', function ( assert ) {
 
-            var f = new Fixture( assert, { expectedTests: 4, asyncDoneCalls: 2 } ),
+            var f = new Fixture( assert, { expectedTests: 2, asyncDoneCalls: 1 } ),
 
                 promises = new $.Promises( f.dfd.a, f.dfd.b, f.dfd.c, f.dfd.d, f.dfd.e );
 
@@ -79,9 +79,15 @@ $( function () {
                 assert.deepEqual( f.doneArgs.toArray(), [] );
                 assert.deepEqual( f.failArgs.toArray(), ['B rejected'] );
 
-                f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b, f.dfd.c, f.dfd.d, f.dfd.e )
-                    .sameDoneArgs( f.doneArgs.toArray() )
-                    .sameFailArgs( f.failArgs.toArray() );
+                // Comparison to $.when() behaviour fails in jQuery 3. This is a jQuery bug, see
+                // https://github.com/jquery/jquery/issues/3177
+                // Test is disabled until the jQuery issue is fixed.
+
+                // f.compareOutcomeToJQueryWhen.usingDeferreds( f.dfd.a, f.dfd.b, f.dfd.c, f.dfd.d, f.dfd.e )
+                //     .sameDoneArgs( f.doneArgs.toArray() )
+                //     .sameFailArgs( f.failArgs.toArray() );
+
+                f.testDone();
 
             } );
 
