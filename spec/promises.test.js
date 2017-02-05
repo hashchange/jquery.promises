@@ -1,6 +1,9 @@
 /*global $ */
 $( function () {
 
+    var module = QUnit.module,
+        test = QUnit.test;
+
     module( 'Testing base functionality', function () {
 
         test( 'Resolved promises: Constructor and add() accept both promises and deferreds, collection resolves correctly, arguments are passed on', function ( assert ) {
