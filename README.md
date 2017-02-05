@@ -163,7 +163,7 @@ New test files in the `spec` directory are picked up automatically, no need to e
 
 MIT.
 
-Copyright (c) 2011-2016 Michael Heim.
+Copyright (c) 2011-2017 Michael Heim.
 
 [src]: https://github.com/hashchange/jquery.promises/blob/master/src/jquery.promises.js "Source of jquery.promises.js"
 
