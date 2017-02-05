@@ -1,5 +1,5 @@
-// jQuery.Promises, v1.0.2
-// Copyright (c) 2011-2016 Michael Heim, Zeilenwechsel.de
+// jQuery.Promises, v1.0.3
+// Copyright (c) 2011-2017 Michael Heim, Zeilenwechsel.de
 // Distributed under MIT license
 // http://github.com/hashchange/jquery.promises
 
