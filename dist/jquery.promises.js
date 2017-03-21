@@ -1,4 +1,4 @@
-// jQuery.Promises, v1.0.3
+// jQuery.Promises, v1.0.4
 // Copyright (c) 2011-2017 Michael Heim, Zeilenwechsel.de
 // Distributed under MIT license
 // http://github.com/hashchange/jquery.promises

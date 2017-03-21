@@ -146,6 +146,10 @@ New test files in the `spec` directory are picked up automatically, no need to e
 
 ## Release Notes
 
+### v1.0.4
+
+- Adapted for jQuery 3.2
+
 ### v1.0.3
 
 - Adapted for jQuery 3.1
