@@ -108,12 +108,12 @@ If you'd like to fix, customize or otherwise improve the project: here are your 
 
 ### Setup
 
-[npm][] and [Bower][] set up the environment for you.
+[npm][] sets up the environment for you.
 
-- The only thing you've got to have on your machine is [Node.js]. Download the installer [here][Node.js].
-- Open a command prompt in the project directory.
-- Run `npm install`. (Creates the environment.)
-- Run `bower install`. (Fetches the dependencies of the script.)
+- The only thing you've got to have on your machine (besides Git) is [Node.js]. Download the installer [here][Node.js].
+- Clone the project and open a command prompt in the project directory.
+- Run the setup with `npm run setup`.
+- Make sure the Grunt CLI is installed as a global Node module. If not, or if you are not sure, run `npm install -g grunt-cli` from the command prompt.
 
 Your test and build environment is ready now. If you want to test against specific versions of jQuery, edit `bower.json` first.
 
